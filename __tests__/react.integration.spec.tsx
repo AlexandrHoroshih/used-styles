@@ -67,10 +67,23 @@ describe('File based css stream', () => {
     expect(s1).not.toBe(s3);
   });
 
+  // For experimental purposes i choose to play with this test
   it('ok: test', async () => {
     await styles;
-    expect(getUsedStyles('', styles)).toEqual(['file1.css']);
-    expect(getCriticalStyles('', styles)).toMatchSnapshot();
+
+    const fakeBuildTimeGeneratedLookup = JSON.stringify({
+      ast: styles.ast,
+      lookup: styles.lookup,
+      urlPrefix: styles.urlPrefix,
+    });
+    const fakeRuntimeParsedLookup = JSON.parse(fakeBuildTimeGeneratedLookup);
+    // to make it compatible with the original lookup
+    const resolved = Promise.resolve();
+    fakeRuntimeParsedLookup.then = () => resolved;
+    fakeRuntimeParsedLookup.isReady = true;
+
+    expect(getUsedStyles('', fakeRuntimeParsedLookup)).toEqual(['file1.css']);
+    expect(getCriticalStyles('', fakeRuntimeParsedLookup)).toMatchSnapshot();
 
     const output = renderToString(
       <div>
